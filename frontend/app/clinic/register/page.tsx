@@ -279,7 +279,7 @@ export default function ClinicRegisterPage() {
                         onClick={() => removeTimeFromSlot(slotIndex, timeIndex)}
                         className="text-red-600 hover:text-red-800"
                       >
-                        删除
+                        Delete
                       </button>
                     </div>
                   ))}
