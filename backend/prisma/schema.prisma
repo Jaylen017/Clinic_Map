@@ -1,0 +1,103 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Seed configuration
+// Run with: npm run prisma:seed
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      UserRole @default(PATIENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  clinic    Clinic?
+  bookings  Booking[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  PATIENT
+  CLINIC
+}
+
+model Clinic {
+  id          String   @id @default(cuid())
+  name        String
+  address     String
+  latitude    Float
+  longitude   Float
+  phoneNumber String?
+  email       String?
+  walkInStart String?  // Format: "HH:mm"
+  walkInEnd   String?  // Format: "HH:mm"
+  photoUrl    String?
+  isSearchable Boolean @default(true)
+  googlePlaceId String? @unique // Google Places API place_id
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  timeSlots   TimeSlot[]
+  bookings    Booking[]
+
+  @@map("clinics")
+}
+
+model TimeSlot {
+  id        String   @id @default(cuid())
+  clinicId  String
+  date      DateTime // Date only (time part ignored)
+  startTime String   // Format: "HH:mm"
+  endTime   String   // Format: "HH:mm"
+  isAvailable Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  clinic    Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  booking   Booking?
+
+  @@unique([clinicId, date, startTime, endTime])
+  @@map("time_slots")
+}
+
+model Booking {
+  id         String   @id @default(cuid())
+  userId     String
+  clinicId   String
+  timeSlotId String   @unique
+  status     BookingStatus @default(CONFIRMED)
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clinic     Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  timeSlot   TimeSlot @relation(fields: [timeSlotId], references: [id], onDelete: Cascade)
+
+  @@map("bookings")
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
