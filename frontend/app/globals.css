@@ -32,3 +32,8 @@ body {
   padding: 0;
 }
 
+/* Particle Globe Background */
+canvas {
+  display: block;
+}
+
